@@ -2985,11 +2985,11 @@ paths:
     x-linode-cli-command: databases
     get:
       tags:
-        - Databases
+      - Databases
       summary: Managed Database Engines List
       operationId: getDatabasesEngines
       servers:
-        - url: 'https://api.linode.com/v4beta'
+      - url: https://api.linode.com/v4beta
       x-linode-cli-action: engines
       parameters:
         - $ref: '#/components/parameters/pageOffset'
@@ -3019,13 +3019,13 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       x-code-samples:
-        - lang: Shell
-          source: |
-            curl https://api.linode.com/v4beta/databases/engines/
-        - lang: CLI
-          source: |
-            linode-cli databases engines
-  '/databases/engines/{engineId}':
+      - lang: Shell
+        source: >
+          curl https://api.linode.com/v4beta/databases/engines/
+      - lang: CLI
+        source: >
+          linode-cli databases engines
+  /databases/engines/{engineId}:
     parameters:
       - name: engineId
         in: path
@@ -3036,11 +3036,11 @@ paths:
     x-linode-cli-command: databases
     get:
       tags:
-        - Databases
+      - Databases
       summary: Managed Database Engine View
       operationId: getDatabasesEngine
       servers:
-        - url: 'https://api.linode.com/v4beta'
+      - url: https://api.linode.com/v4beta
       x-linode-cli-action: engine-view
       parameters:
         - $ref: '#/components/parameters/pageOffset'
@@ -3059,12 +3059,12 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       x-code-samples:
-        - lang: Shell
-          source: |
-            curl https://api.linode.com/v4beta/databases/engines//mysql/5.7.30
-        - lang: CLI
-          source: |
-            linode-cli databases engine-view mysql/5.7.30
+      - lang: Shell
+        source: >
+          curl https://api.linode.com/v4beta/databases/engines/mysql/5.7.30
+      - lang: CLI
+        source: >
+          linode-cli databases engine-view mysql/5.7.30
   /databases/instances:
     x-linode-cli-command: databases
     get:
@@ -3177,13 +3177,7 @@ paths:
         content:
           application/json:
             schema:
-              required:
-                - label
-                - type
-                - engine
-                - region
-              allOf:
-                - $ref: '#/components/schemas/DatabaseMySQLRequest'
+              $ref: '#/components/schemas/DatabaseMySQLRequest'
       responses:
         '200':
           description: Returns an array of all Managed Databases on your Account.
@@ -16867,13 +16861,18 @@ components:
     Database:
       type: object
       description: A general Managed Database instance object containing properties that are identical for all database types.
+      required:
+      - label
+      - type
+      - engine
+      - region
       properties:
         id:
           type: integer
-          readOnly: true
           description: A unique ID that can be used to identify and reference the Managed Database.
           example: 123
           x-linode-cli-display: 1
+          readOnly: true
         label:
           type: string
           maxLength: 32
@@ -16888,6 +16887,20 @@ components:
           example: g6-dedicated-2
           x-linode-filterable: true
           x-linode-cli-display: 4
+        engine:
+          type: string
+          description: 'The Managed Database engine type. Currently, only MySQL is available.'
+          example: mysql
+          x-linode-filterable: true
+          x-linode-cli-display: 6
+          readOnly: true
+        version:
+          type: string
+          description: The Managed Database version.
+          example: 8.0.26
+          x-linode-filterable: true
+          x-linode-cli-display: 7
+          readOnly: true
         region:
           type: string
           description: 'The [Region](/docs/api/regions/) ID for the Managed Database.'
@@ -16896,7 +16909,6 @@ components:
           x-linode-cli-display: 3
         status:
           type: string
-          readOnly: true
           enum:
             - provisioning
             - active
@@ -16919,6 +16931,7 @@ components:
             restoring: yellow
             failed: red
             degraded: red
+          readOnly: true
         encrypted:
           type: boolean
           default: false
@@ -16926,16 +16939,16 @@ components:
           example: false
         allow_list:
           type: array
-          items:
-            type: string
-            format: ipv4
           example:
             - 203.0.113.1/32
             - 192.0.1.0/24
           description: |
-            A list of IP addresses that can access the Managed Database. Each item can be a single IP address or an range in IP/mask format.
+            A list of IP addresses that can access the Managed Database. Each item can be a single IP address or a range in CIDR format.
 
             By default, all connections (both public and private) to the Managed Database are blocked unless their IP address is included on this list.
+          items:
+            type: string
+            pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$'
         cluster_size:
           type: integer
           enum:
@@ -16949,19 +16962,19 @@ components:
           x-linode-cli-display: 5
         hosts:
           type: object
-          readOnly: true
           description: The primary and secondary hosts for the Managed Database. These are only defined for high availability clusters.
           properties:
             primary:
               type: string
-              nullable: true
               description: 'The primary node hostname, if any.'
-              example: lin-123-456-mysql-master.servers.staging.linodedb.net
+              example: lin-123-123-mysql-master.servers.linodedb.net
+              nullable: true
             secondary:
               type: string
-              nullable: true
               description: 'The secondary node hostname, if any.'
-              example: lin-456-789-mysql-master.servers.staging.linodedb.net
+              example: lin-123-123-mysql-master-private.servers.linodedb.net
+              nullable: true
+          readOnly: true
         created:
           type: string
           format: date-time
@@ -16980,20 +16993,6 @@ components:
           description: |
             Append this to `https://api.linode.com` to run commands for the Managed Database.
           readOnly: true
-        engine:
-          type: string
-          readOnly: true
-          description: 'The Managed Database engine type. Currently, only MySQL is available.'
-          example: mysql
-          x-linode-filterable: true
-          x-linode-cli-display: 6
-        version:
-          type: string
-          readOnly: true
-          description: The Managed Database engine version.
-          example: 8.0.26
-          x-linode-filterable: true
-          x-linode-cli-display: 7
     DatabaseBackup:
       type: object
       description: A database backup object.
@@ -17076,10 +17075,22 @@ components:
           x-linode-cli-display: 1
         label:
           $ref: '#/components/schemas/Database/properties/label'
-          x-linode-cli-display: 2
         type:
           $ref: '#/components/schemas/Database/properties/type'
-          x-linode-cli-display: 4
+        engine:
+          type: string
+          description: The Managed Database engine type.
+          example: mysql
+          x-linode-filterable: true
+          x-linode-cli-display: 6
+          readOnly: true
+        version:
+          type: string
+          description: The Managed Database version.
+          example: 8.0.26
+          x-linode-filterable: true
+          x-linode-cli-display: 7
+          readOnly: true
         region:
           $ref: '#/components/schemas/Database/properties/region'
           x-linode-cli-display: 3
@@ -17095,26 +17106,14 @@ components:
           x-linode-cli-display: 5
         hosts:
           $ref: '#/components/schemas/Database/properties/hosts'
-        created:
-          $ref: '#/components/schemas/Database/properties/created'
-        updated:
-          $ref: '#/components/schemas/Database/properties/updated'
-        instance_uri:
-          $ref: '#/components/schemas/Database/properties/instance_uri'
-        engine:
-          type: string
-          readOnly: true
-          description: The Managed Database engine type.
-          example: mysql
-          x-linode-filterable: true
-          x-linode-cli-display: 6
-        version:
-          type: string
-          readOnly: true
-          description: The Managed Database engine version.
-          example: 8.0.26
-          x-linode-filterable: true
-          x-linode-cli-display: 7
+        ssl_connection:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            Whether to require SSL credentials to establish a connection to the Managed Database. Defaults to `false`.
+
+            Use the **MySQL Database SSL View** ([GET /databases/mysql/instances/{instanceId}/ssl](/docs/api/databases/#mysql-database-credentials-view)) command to view SSL credentials for a MySQL Database.
         replication_type:
           type: string
           enum:
@@ -17131,14 +17130,10 @@ components:
 
             Must be `asynch` or `semi_synch` for a high availability cluster.
           x-linode-cli-display: 99
-        ssl_connection:
-          type: boolean
-          default: false
-          example: true
-          description: |
-            Whether to require SSL credentials to establish a connection to the Managed Database. Defaults to `false`.
-
-            Use the **MySQL Database SSL View** ([GET /databases/mysql/instances/{instanceId}/ssl](/docs/api/databases/#mysql-database-credentials-view)) command to view SSL credentials for a MySQL Database.
+        created:
+          $ref: '#/components/schemas/Database/properties/created'
+        updated:
+          $ref: '#/components/schemas/Database/properties/updated'
     DatabaseMySQLRequest:
       type: object
       description: Managed Database request object for MySQL databases.
@@ -17169,7 +17164,7 @@ components:
       properties:
         ca_certificate:
           type: string
-          description: The SSL CA certificate for the Managed Database instance.
+          description: The SSL CA certificate for the Managed Database instance. (Mention it's base64 encoded)
           example: LS0tLS1CRUdJ...==
           x-linode-cli-display: 1
     DatabaseType:
@@ -17186,7 +17181,7 @@ components:
           type: string
           description: A human-readable string that describes each plan type. For display purposes only.
           readOnly: true
-          example: DBaaS MySQL - Nanode 1G
+          example: DBaaS MySQL - Nanode 1GB
           x-linode-cli-display: 2
         cluster_size:
           type: array
